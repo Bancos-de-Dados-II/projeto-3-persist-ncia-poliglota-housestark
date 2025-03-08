@@ -10,6 +10,7 @@ export function Header() {
             <nav className="flex">
                 <ul className="flex gap-20" >
                     <li><Link to={'/'} >Home</Link></li>
+                    <li><Link to={'/signin'} >Login</Link></li>
                     <li><Link to={'/registrar'} >Cadastro</Link></li>
                     <li><Link to={'/agricultores'} >Lista</Link></li>
                     <li><Link to={'/sobre'} >Sobre</Link></li>
