@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { ObjectId } from "mongodb";
+import { createClient } from "redis";
 
 const prisma = new PrismaClient();
+const redisClient = createClient();
 
 export const createFarmer = async (req: Request, res: Response) => {
     try {
@@ -23,6 +25,7 @@ export const createFarmer = async (req: Request, res: Response) => {
                     },
                 },
             })
+            await redisClient.del("farmers");
             res.status(201).json({ "message": "Agricultor criado com sucesso!" });
             return;
         } else {
