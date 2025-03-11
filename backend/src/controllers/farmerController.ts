@@ -1,10 +1,9 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { ObjectId } from "mongodb";
-import { createClient } from "redis";
+import redisClient from "../../redis/redisClient";
 
 const prisma = new PrismaClient();
-const redisClient = createClient();
 
 export const createFarmer = async (req: Request, res: Response) => {
     try {
