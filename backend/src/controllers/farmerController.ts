@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { ObjectId } from "mongodb";
+import redisClient from "../../redis/redisClient";
 
 const prisma = new PrismaClient();
 
@@ -23,6 +24,7 @@ export const createFarmer = async (req: Request, res: Response) => {
                     },
                 },
             })
+            await redisClient.del("farmers");
             res.status(201).json({ "message": "Agricultor criado com sucesso!" });
             return;
         } else {
@@ -38,6 +40,11 @@ export const createFarmer = async (req: Request, res: Response) => {
 
 export const getAllFarmers = async (req: Request, res: Response) => {
     try {
+        const cachedFarmers = await redisClient.get("farmers");
+        if (cachedFarmers) {
+            res.status(200).json(JSON.parse(cachedFarmers));
+            return;
+        }
         const farmers = await prisma.agricultor.findMany({
             select: {
                 id: true,
@@ -50,6 +57,7 @@ export const getAllFarmers = async (req: Request, res: Response) => {
         });
 
         if (farmers.length > 0) {
+            await redisClient.set("farmers", JSON.stringify(farmers), { EX: 60 });
             res.status(200).json(farmers);
             return;
         }
@@ -74,6 +82,13 @@ export const getFarmerById = async (req: Request, res: Response) => {
             return;
         }
 
+        // Verifica se o agricultor está no cache
+        const cachedFarmer = await redisClient.get(`farmer:${farmerId}`);
+        if (cachedFarmer) {
+            res.status(200).json(JSON.parse(cachedFarmer));
+            return;
+        }
+
         const farmer = await prisma.agricultor.findUnique({
             where: {
                 id: farmerId
@@ -81,6 +96,8 @@ export const getFarmerById = async (req: Request, res: Response) => {
         });
 
         if (farmer) {
+            // Armazena o agricultor no cache
+            await redisClient.set(`farmer:${farmerId}`, JSON.stringify(farmer), { EX: 60 });
             res.status(200).json(farmer);
             return;
         }
@@ -94,6 +111,7 @@ export const getFarmerById = async (req: Request, res: Response) => {
         return;
     }
 };
+
 
 
 export const updateFarmer = async (req: Request, res: Response) => {
@@ -142,6 +160,8 @@ export const updateFarmer = async (req: Request, res: Response) => {
         });
 
         if (farmer) {
+            await redisClient.del(`farmer:${id}`);
+            await redisClient.del("farmers");
             res.status(200).json({ message: "Agricultor atualizado com sucesso!" });
             return;
         }
@@ -157,7 +177,6 @@ export const updateFarmer = async (req: Request, res: Response) => {
 
 export const deleteFarmer = async (req: Request, res: Response) => {
     try {
-
         const farmerId = req.params.id;
 
         // Verifica se o ID é um ObjectId válido antes da consulta
@@ -173,20 +192,25 @@ export const deleteFarmer = async (req: Request, res: Response) => {
         });
 
         if (farmer) {
-            const farmer = await prisma.agricultor.delete({
+            await prisma.agricultor.delete({
                 where: {
                     id: farmerId
                 }
             });
-            res.status(200).json({ "message": "Agricultor excluido com sucesso!" });
+
+            // Remove o agricultor do cache
+            await redisClient.del(`farmer:${farmerId}`);
+            await redisClient.del("farmers"); // Opcional, para garantir que a lista esteja atualizada
+
+            res.status(200).json({ "message": "Agricultor excluído com sucesso!" });
             return;
         } 
 
-        res.status(404).json({ "message": "Agricultor nao encontrado!" });
+        res.status(404).json({ "message": "Agricultor não encontrado!" });
         return;
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Internal server error" });
         return;
     }
-}
+};
