@@ -151,6 +151,8 @@ export const updateFarmer = async (req: Request, res: Response) => {
         });
 
         if (farmer) {
+            await redisClient.del(`farmer:${id}`);
+            await redisClient.del("farmers");
             res.status(200).json({ message: "Agricultor atualizado com sucesso!" });
             return;
         }
