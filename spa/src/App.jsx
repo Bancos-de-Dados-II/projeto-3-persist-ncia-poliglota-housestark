@@ -6,6 +6,7 @@ import { Signin } from "./pages/signin";
 import { Signup } from "./pages/signup";
 import { Map } from "./pages/map";
 import { BrowserRouter, Routes, Route } from "react-router";
+import { NotFound } from "./pages/404";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/mapa-calor" element={<Map />} />
         <Route path="/signin" element={<Signin />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   )
