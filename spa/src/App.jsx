@@ -2,8 +2,6 @@ import { Home } from "./pages/home"
 import {List} from "./pages/list"
 import { About } from "./pages/about";
 import { Register } from "./pages/register";
-import { Signin } from "./pages/signin";
-import { Signup } from "./pages/signup";
 import { Map } from "./pages/map";
 import { BrowserRouter, Routes, Route } from "react-router";
 import { NotFound } from "./pages/404";
@@ -17,8 +15,6 @@ function App() {
         <Route path="/sobre" element={<About />} />
         <Route path="/registrar" element={<Register />} />
         <Route path="/mapa-calor" element={<Map />} />
-        <Route path="/signin" element={<Signin />} />
-        <Route path="/signup" element={<Signup />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
