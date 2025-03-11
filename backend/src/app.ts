@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from 'cors';
 import farmerRoutes from "./routes/farmerRoutes";
+import  redisClient  from "../redis/redisClient";
 
 dotenv.config();
 
@@ -19,6 +20,10 @@ const PORT = process.env.PORT || 3000;
 
 //midlewares
 app.use(express.json());
+
+//testar conexão redis
+redisClient.on("error", (err) => console.error("Erro no Redis:", err));
+
 
 //routes
 app.use('/api/', farmerRoutes);
