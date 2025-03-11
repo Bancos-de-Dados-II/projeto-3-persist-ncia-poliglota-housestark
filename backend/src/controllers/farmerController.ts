@@ -41,6 +41,11 @@ export const createFarmer = async (req: Request, res: Response) => {
 
 export const getAllFarmers = async (req: Request, res: Response) => {
     try {
+        const cachedFarmers = await redisClient.get("farmers");
+        if (cachedFarmers) {
+            res.status(200).json(JSON.parse(cachedFarmers));
+            return;
+        }
         const farmers = await prisma.agricultor.findMany({
             select: {
                 id: true,
@@ -53,6 +58,7 @@ export const getAllFarmers = async (req: Request, res: Response) => {
         });
 
         if (farmers.length > 0) {
+            await redisClient.set("farmers", JSON.stringify(farmers), { EX: 60 });
             res.status(200).json(farmers);
             return;
         }
