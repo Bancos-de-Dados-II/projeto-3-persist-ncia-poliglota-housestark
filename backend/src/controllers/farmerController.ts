@@ -82,6 +82,13 @@ export const getFarmerById = async (req: Request, res: Response) => {
             return;
         }
 
+        // Verifica se o agricultor está no cache
+        const cachedFarmer = await redisClient.get(`farmer:${farmerId}`);
+        if (cachedFarmer) {
+            res.status(200).json(JSON.parse(cachedFarmer));
+            return;
+        }
+
         const farmer = await prisma.agricultor.findUnique({
             where: {
                 id: farmerId
@@ -89,6 +96,8 @@ export const getFarmerById = async (req: Request, res: Response) => {
         });
 
         if (farmer) {
+            // Armazena o agricultor no cache
+            await redisClient.set(`farmer:${farmerId}`, JSON.stringify(farmer), { EX: 60 });
             res.status(200).json(farmer);
             return;
         }
@@ -102,6 +111,7 @@ export const getFarmerById = async (req: Request, res: Response) => {
         return;
     }
 };
+
 
 
 export const updateFarmer = async (req: Request, res: Response) => {
@@ -167,7 +177,6 @@ export const updateFarmer = async (req: Request, res: Response) => {
 
 export const deleteFarmer = async (req: Request, res: Response) => {
     try {
-
         const farmerId = req.params.id;
 
         // Verifica se o ID é um ObjectId válido antes da consulta
@@ -183,20 +192,25 @@ export const deleteFarmer = async (req: Request, res: Response) => {
         });
 
         if (farmer) {
-            const farmer = await prisma.agricultor.delete({
+            await prisma.agricultor.delete({
                 where: {
                     id: farmerId
                 }
             });
-            res.status(200).json({ "message": "Agricultor excluido com sucesso!" });
+
+            // Remove o agricultor do cache
+            await redisClient.del(`farmer:${farmerId}`);
+            await redisClient.del("farmers"); // Opcional, para garantir que a lista esteja atualizada
+
+            res.status(200).json({ "message": "Agricultor excluído com sucesso!" });
             return;
         } 
 
-        res.status(404).json({ "message": "Agricultor nao encontrado!" });
+        res.status(404).json({ "message": "Agricultor não encontrado!" });
         return;
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Internal server error" });
         return;
     }
-}
+};
