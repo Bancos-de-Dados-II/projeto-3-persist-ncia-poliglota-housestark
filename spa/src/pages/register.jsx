@@ -1,7 +1,7 @@
 import { Input } from '../components/input'
 import { Button } from '../components/button'
 import { Map } from '../components/map'
-import { NavLink, useNavigate } from 'react-router'
+import { useNavigate } from 'react-router'
 import { useState } from 'react'
 import { createFarmer } from '../utils/create-farmer'
 import { Header } from '../components/header'

@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from 'cors';
 import farmerRoutes from "./routes/farmerRoutes";
+import  redisClient  from "../redis/redisClient";
 
 dotenv.config();
 
